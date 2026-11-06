@@ -3,6 +3,8 @@ import type { Route } from "./+types/dashboard";
 import { getUserEnrolledCourses } from "~/services/enrollmentService";
 import { calculateProgress, getCompletedLessonCount, getTotalLessonCount, getNextIncompleteLesson } from "~/services/progressService";
 import { getCurrentUserId } from "~/lib/session";
+import { getUserById } from "~/services/userService";
+import { UserRole } from "~/db/schema";
 import { Card, CardContent, CardFooter, CardHeader } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Skeleton } from "~/components/ui/skeleton";
@@ -59,7 +61,10 @@ export async function loader({ request }: Route.LoaderArgs) {
   const completedCourses = coursesWithProgress.filter((c) => c.isCompleted);
   const inProgressCourses = coursesWithProgress.filter((c) => !c.isCompleted);
 
-  return { inProgressCourses, completedCourses };
+  const currentUser = getUserById(currentUserId);
+  const isAdmin = currentUser?.role === UserRole.Admin;
+
+  return { inProgressCourses, completedCourses, isAdmin };
 }
 
 function DashboardCardSkeleton() {
@@ -102,7 +107,7 @@ export function HydrateFallback() {
 }
 
 export default function Dashboard({ loaderData }: Route.ComponentProps) {
-  const { inProgressCourses, completedCourses } = loaderData;
+  const { inProgressCourses, completedCourses, isAdmin } = loaderData;
   const totalCourses = inProgressCourses.length + completedCourses.length;
 
   return (
@@ -116,11 +121,20 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
         <span className="text-foreground">Dashboard</span>
       </nav>
 
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">My Dashboard</h1>
-        <p className="mt-1 text-muted-foreground">
-          Track your learning progress
-        </p>
+      <div className="mb-8 flex flex-wrap items-center gap-4">
+        <div className="min-w-0">
+          <h1 className="text-3xl font-bold">My Dashboard</h1>
+          <p className="mt-1 text-muted-foreground">
+            Track your learning progress
+          </p>
+        </div>
+        {isAdmin && (
+          <img
+            src="/images/elephant.svg"
+            alt=""
+            className="ml-auto size-24 max-w-none shrink-0"
+          />
+        )}
       </div>
 
       {totalCourses === 0 ? (
