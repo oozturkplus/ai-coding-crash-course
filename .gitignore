@@ -27,3 +27,5 @@
 # request-logger remembers which agent you chose
 /request-logger/.agent-choice.json
 
+# Local copy of third-party agent skills, not part of this project
+/skills/
